@@ -1,0 +1,42 @@
+#!/usr/sbin/nft -f
+
+# drop any existing nftables ruleset
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    # established/related connections:
+    ct state established, related accept
+
+    # loopback interface
+    iifname lo accept
+    iifname enp1s0 accept
+    #icmp
+    icmp type echo-request accept
+
+    # allow incoming http and https from approved IP range>
+    log prefix "Dropper Input: "
+  }
+
+  chain forward {
+    # drop everything (assumes this device is not a route>
+    type filter hook forward priority filter; policy accept;
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+  }
+}
+
+table ip nat {
+  chain prerouting {
+    type nat hook prerouting priority filter; policy accept;
+  }
+
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    oifname wlp7s0 masquerade
+  }
+}
