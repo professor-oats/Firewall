@@ -13,6 +13,8 @@ table inet filter {
     # loopback interface
     iifname lo accept
     iifname enp1s0 accept
+    iifname enp8s0 accept
+    iifname enp9s0 accept
     #icmp
     icmp type echo-request accept
 
@@ -23,6 +25,8 @@ table inet filter {
   chain forward {
     # drop everything (assumes this device is not a route>
     type filter hook forward priority filter; policy accept;
+    iifname vbr0public oifname wlp7s0 accept
+    iifname vbr0pentest oifname wlp7s0 accept
   }
 
   chain output {
@@ -37,6 +41,9 @@ table ip nat {
 
   chain postrouting {
     type nat hook postrouting priority srcnat; policy accept;
-    oifname wlp7s0 masquerade
+    # NAT for host subnet
+    ip saddr 10.0.0.0/29 oifname wlp7s0 masquerade
+    ip saddr 10.0.0.8/29 oifname wlp7s0 masquerade
+    ip saddr 10.0.0.16/29 oifname wlp7s0 masquerade
   }
 }
